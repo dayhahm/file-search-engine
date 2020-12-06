@@ -11,7 +11,7 @@ public class BoundedBuffer {
     public BoundedBuffer(int capacity) {
         this.capacity = capacity;
         this.size = 0;
-        this.end = -1;
+        this.end = 0;
         this.start = 0;
         this.buffer = new Path[capacity];
     }
@@ -28,20 +28,15 @@ public class BoundedBuffer {
         }
     }
 
-    public void enqueue(Path file) {
+    public void enqueue(Path file) throws InterruptedException {
         synchronized (this) {
             // wait for a spot to open up if the buffer is full
-            while (isFull()) {
-                try {
-                    this.wait();
-                } catch (InterruptedException e) { // replace with more appropriate catch later on
-                    System.out.println("Thread was interrupted while waiting.");
-                }
-            }
-
+            while (isFull())
+                this.wait();
 
             //fill the buffer
-            this.buffer[start++] = file;
+            this.buffer[start] = file;
+            start = (start + 1) % capacity;
             this.size++;
 
             // the buffer was previously empty, notify all the threads
@@ -51,19 +46,15 @@ public class BoundedBuffer {
         }
     }
 
-    public Path dequeue() {
+    public Path dequeue() throws InterruptedException {
         synchronized (this) {
             // wait for an object to take out of the buffer
-            while (isEmpty()) {
-                try {
-                    this.wait();
-                } catch (InterruptedException e) { // replace with more appropriate catch later on
-                    System.out.println("Thread was interrupted while waiting.");
-                }
-            }
+            while (isEmpty())
+                this.wait();
 
             // take out and object from the buffer
-            Path file = this.buffer[end--];
+            Path file = this.buffer[end];
+            end = (end + 1) % capacity;
             this.size--;
 
             // the buffer was previously full, notify all the threads. (is this necessary if we only have one producer thread)
