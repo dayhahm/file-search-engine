@@ -3,7 +3,7 @@ public class ThreadRunner {
     public static void main(String[] args) {
         BoundedBuffer buffer = new BoundedBuffer(20);
         Parser parser = new Parser(buffer);
-        String dir = "/";
+        String dir = "/Users/debbie";
         try {
             Traverser traverser = new Traverser(buffer, dir);
             parser.start();
