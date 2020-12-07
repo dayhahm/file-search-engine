@@ -1,7 +1,9 @@
 import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.io.IOException;
 import java.util.stream.Collectors;
 import java.util.List;
+import java.util.ArrayList;
 
 public class Traverser extends Thread {
     /*
@@ -29,9 +31,27 @@ public class Traverser extends Thread {
     public void run() {
         try {
 //            walk through all path starting from the root directory and filter so only files are remaining
-            List<Path> files = Files.walk(rootDir)
-                                    .filter(p -> Files.isRegularFile(p))
-                                    .collect(Collectors.toList());
+            List<Path> files = new ArrayList<>();
+            Files.walkFileTree(
+                    rootDir, new SimpleFileVisitor<Path>() {
+                        @Override
+                        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                                throws IOException {
+                            files.add(file);
+                            return FileVisitResult.CONTINUE;
+                        }
+
+                        @Override
+                        public FileVisitResult visitFileFailed(Path file, IOException e)
+                                throws IOException {
+                            System.out.println("Could not visit " + file);
+                            return FileVisitResult.SKIP_SUBTREE;
+                        }
+                    }
+            );
+//            List<Path> files = Files.walk(rootDir)
+//                                    .filter(p -> Files.isRegularFile(p))
+//                                    .collect(Collectors.toList());
             for (Path file: files) {
                 try {
                     buffer.enqueue(file);
