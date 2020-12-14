@@ -8,12 +8,16 @@ public class ThreadRunner {
     public static void main(String[] args) {
         BoundedBuffer buffer = new BoundedBuffer(20);
         ConcurrentHashMap<String, PriorityQueue<ADT>> wordToFileCount = new ConcurrentHashMap<>();
-        Parser p1 = new Parser(buffer, wordToFileCount);
-        Parser p2 = new Parser(buffer, wordToFileCount);
-        Parser p3 = new Parser(buffer, wordToFileCount);
-        Parser p4 = new Parser(buffer, wordToFileCount);
-        Parser p5 = new Parser(buffer, wordToFileCount);
-        String dir = "/Users/debbie/Documents/Coronavirus-Twitter-Trends";
+        ConcurrentHashMap<String, Integer> stats = new ConcurrentHashMap<>();
+        stats.put("files", 0);
+        stats.put("bytes", 0);
+        stats.put("unreported", 0);
+        Parser p1 = new Parser(buffer, wordToFileCount, stats);
+        Parser p2 = new Parser(buffer, wordToFileCount, stats);
+        Parser p3 = new Parser(buffer, wordToFileCount, stats);
+        Parser p4 = new Parser(buffer, wordToFileCount, stats);
+        Parser p5 = new Parser(buffer, wordToFileCount, stats);
+        String dir = "/Users/debbie/Documents";
         try {
             Traverser traverser = new Traverser(buffer, dir);
             System.out.println("Starting up all threads");
