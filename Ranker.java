@@ -10,6 +10,8 @@ public class Ranker {
      * that takes in just a keyword. If using constructor with no limit, uses a default limit of about 10.
      * Priority queue.
      * https://www.geeksforgeeks.org/implement-priorityqueue-comparator-java/
+     *
+     * add summary of the synchronization discipline.
      */
 
     private ConcurrentHashMap<String, PriorityQueue<ADT>> wordToFileCount;
