@@ -3,15 +3,15 @@ import java.nio.file.Paths;
 
 public class ADT {
 
-    private Path filename;
+    private String filename;
     private int count;
 
-    public ADT(Path filename, int count) {
+    public ADT(String filename, int count) {
         this.filename = filename;
         this.count = count;
     }
 
-    public Path getFilename() {
+    public String getFilename() {
         return filename;
     }
 
