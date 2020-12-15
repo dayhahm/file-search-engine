@@ -1,5 +1,5 @@
 # file-search-engine
-###Problem
+### Problem
 
 For most users having to manually search through their file system is not feasible due to the volume of files. So, 
 instead there should exist a tool where a user can enter keywords and the tool sifts through the files, returning the 
@@ -61,12 +61,12 @@ or notices being added to the bounded buffer. However, as parsing is the largest
 threads that parse. Each thread, takes out individual files from the bounded buffer and parses them, avoiding any 
 issues of overlap.
 
-###Implementation
+### Implementation
 
 //talk about index using ConcurrentHashMap and PriorityQueue and pros and cons
 
-###Evaluation
+### Evaluation
 
 //need to implement evaluation measures
 
-###Conclusion
+### Conclusion
