@@ -12,14 +12,24 @@ public class ThreadRunner {
         stats.put("files", 0);
         stats.put("bytes", 0);
         stats.put("unreported", 0);
-        Parser p1 = new Parser(buffer, wordToFileCount, stats);
-        Parser p2 = new Parser(buffer, wordToFileCount, stats);
-        Parser p3 = new Parser(buffer, wordToFileCount, stats);
-        Parser p4 = new Parser(buffer, wordToFileCount, stats);
-        Parser p5 = new Parser(buffer, wordToFileCount, stats);
-        String dir = "/Users/debbie/Documents";
+        stats.put("paths", 0);
+
+        boolean verbose = false;
+        for (String arg: args) {
+            if (arg.equals("-v") || arg.equals("--verbose")) {
+                verbose = true;
+            }
+        }
+
+        Parser p1 = new Parser(buffer, wordToFileCount, stats, verbose);
+        Parser p2 = new Parser(buffer, wordToFileCount, stats, verbose);
+        Parser p3 = new Parser(buffer, wordToFileCount, stats, verbose);
+        Parser p4 = new Parser(buffer, wordToFileCount, stats, verbose);
+        Parser p5 = new Parser(buffer, wordToFileCount, stats, verbose);
+        String dir = "/Users/debbie/Documents/Coronavirus-Twitter-Trends";
         try {
             Traverser traverser = new Traverser(buffer, dir);
+            Watcher watcher = new Watcher(buffer, dir);
             System.out.println("Starting up all threads");
             traverser.start();
             p1.start();
@@ -27,6 +37,7 @@ public class ThreadRunner {
             p3.start();
             p4.start();
             p5.start();
+            watcher.start();
 
             traverser.join();
 
@@ -37,10 +48,16 @@ public class ThreadRunner {
                 Scanner s = new Scanner(System.in);
                 System.out.println("Enter a word to search: ");
                 String word = s.nextLine();
+                word = word.toLowerCase();
                 while (!word.equals("quit")) {
-                    ADT[] filePairs = ranker.getTop(word);
-                    for (int i = 0; i < filePairs.length; i++) {
-                        System.out.println((i + 1) + " - " + filePairs[i].getFilename() + ":" + filePairs[i].getCount());
+                    try {
+                        System.out.println(word);
+                        ADT[] filePairs = ranker.getTop(word);
+                        for (int i = 0; i < filePairs.length; i++) {
+                            System.out.println((i + 1) + " - " + filePairs[i].getFilename() + ":" + filePairs[i].getCount());
+                        }
+                    } catch (Exception e) {
+                        System.out.println(e.getMessage());
                     }
                     System.out.println("Enter a word to search: ");
                     word = s.nextLine();

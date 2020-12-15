@@ -6,14 +6,14 @@ public class BoundedBuffer {
     private int size;
     private int start;
     private int end;
-    private Path[] buffer;
+    private String[] buffer;
 
     public BoundedBuffer(int capacity) {
         this.capacity = capacity;
         this.size = 0;
         this.end = 0;
         this.start = 0;
-        this.buffer = new Path[capacity];
+        this.buffer = new String[capacity];
     }
 
     public boolean isEmpty() {
@@ -28,7 +28,7 @@ public class BoundedBuffer {
         }
     }
 
-    public void enqueue(Path file) throws InterruptedException {
+    public void enqueue(String file) throws InterruptedException {
         synchronized (this) {
             // wait for a spot to open up if the buffer is full
             while (isFull())
@@ -46,14 +46,14 @@ public class BoundedBuffer {
         }
     }
 
-    public Path dequeue() throws InterruptedException {
+    public String dequeue() throws InterruptedException {
         synchronized (this) {
             // wait for an object to take out of the buffer
             while (isEmpty())
                 this.wait();
 
             // take out and object from the buffer
-            Path file = this.buffer[end];
+            String file = this.buffer[end];
             end = (end + 1) % capacity;
             this.size--;
 
