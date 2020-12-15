@@ -33,7 +33,7 @@ The most important aspects to consider during this project are
     1) After the initial indexing, the FSE must be able to update its index with any changes that may occur. Files that 
     are newly created, updated, or deleted must be reflected in the index even after the initial indexing.
 
-###Design
+### Design
 
 Our file search engine has 4 basic parts. 
 1) Traverser
