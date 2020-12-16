@@ -54,6 +54,7 @@ public class Traverser extends Thread {
 //                                    .collect(Collectors.toList());
             for (String file: files) {
                 try {
+
                     buffer.enqueue(file);
                 } catch (InterruptedException e) {
                     System.out.println("traverser interrupted");

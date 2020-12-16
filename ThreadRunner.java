@@ -11,7 +11,8 @@ public class ThreadRunner {
 
     public static void main(String[] args) {
         BoundedBuffer buffer = new BoundedBuffer(20);
-        ConcurrentHashMap<String, PriorityQueue<FileCount>> wordToFileCount = new ConcurrentHashMap<>();
+//        ConcurrentHashMap<String, PriorityQueue<FileCount>> wordToFileCount = new ConcurrentHashMap<>();
+        Trie wordToFileCount = new Trie();
         ConcurrentHashMap<String, Integer> stats = new ConcurrentHashMap<>();
         stats.put("files", 0);
         stats.put("bytes", 0);
@@ -25,11 +26,11 @@ public class ThreadRunner {
             }
         }
 
-        Parser p1 = new Parser(buffer, wordToFileCount, stats, verbose);
-        Parser p2 = new Parser(buffer, wordToFileCount, stats, verbose);
-        Parser p3 = new Parser(buffer, wordToFileCount, stats, verbose);
-        Parser p4 = new Parser(buffer, wordToFileCount, stats, verbose);
-        Parser p5 = new Parser(buffer, wordToFileCount, stats, verbose);
+        TrieParser p1 = new TrieParser(buffer, wordToFileCount, stats, verbose);
+        TrieParser p2 = new TrieParser(buffer, wordToFileCount, stats, verbose);
+        TrieParser p3 = new TrieParser(buffer, wordToFileCount, stats, verbose);
+        TrieParser p4 = new TrieParser(buffer, wordToFileCount, stats, verbose);
+        TrieParser p5 = new TrieParser(buffer, wordToFileCount, stats, verbose);
         String dir = "/Users/debbie/Documents/Coronavirus-Twitter-Trends";
         try {
             Traverser traverser = new Traverser(buffer, dir);
@@ -48,7 +49,7 @@ public class ThreadRunner {
             System.out.println("Traversal has completed — parsing may be ongoing");
 
             try {
-                Ranker ranker = new Ranker(wordToFileCount);
+                TrieRanker ranker = new TrieRanker(wordToFileCount);
                 Scanner s = new Scanner(System.in);
                 System.out.println("Enter a word to search: ");
                 String word = s.nextLine();

@@ -7,7 +7,7 @@ public class FileCount {
     private int count;
 
     public FileCount(String filename, int count) {
-        this.filename = null;
+        this.filename = filename;
         this.count = count;
     }
 
