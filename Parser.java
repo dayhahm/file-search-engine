@@ -3,10 +3,14 @@ import java.io.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+// look into tries
+// or some parts of this structure may be in memory
+// look into maximum heap size relative to stats
+
 public class Parser extends Thread {
     /*
      * Will have multiple threads. consumer thread for the bounded buffer.
-     * Takes in a file frome the bounded buffer, creates and updates a HashTable with a word as the key and an ADT
+     * Takes in a file frome the bounded buffer, creates and updates a HashTable with a word as the key and an FileCount
      * object as a value.
      * number of words in the hashamp
      * size of words in index
@@ -16,13 +20,13 @@ public class Parser extends Thread {
      */
 
     // this map needs to be shared by all the threads. so maybe this needs to exist in the thread control
-    //    private Map<String, ADT> wordMap;   //is HashTable an implementation of Map?
+    //    private Map<String, FileCount> wordMap;   //is HashTable an implementation of Map?
     private BoundedBuffer buffer;
-    private ConcurrentHashMap<String, PriorityQueue<ADT>> wordToFileCount;
+    private ConcurrentHashMap<String, PriorityQueue<FileCount>> wordToFileCount;
     private ConcurrentHashMap<String, Integer> stats;
     private boolean verbose;
 
-    public Parser(BoundedBuffer buffer, ConcurrentHashMap<String, PriorityQueue<ADT>> wordToFileCount,
+    public Parser(BoundedBuffer buffer, ConcurrentHashMap<String, PriorityQueue<FileCount>> wordToFileCount,
                   ConcurrentHashMap<String, Integer> stats, boolean verbose) {
         super();
         this.buffer = buffer;
@@ -33,6 +37,7 @@ public class Parser extends Thread {
 
     public void parse(String file) {
         Map<String, Integer> wordCounter = new HashMap<>();
+
         try {
             // change to read incrementally instead of reading all the lines at once
             BufferedReader br = new BufferedReader(new FileReader(file));
@@ -57,16 +62,16 @@ public class Parser extends Thread {
         synchronized(wordToFileCount) {
             for (String word : wordCounter.keySet()) {
                 if (wordToFileCount.containsKey(word)) {
-                    PriorityQueue<ADT> q = wordToFileCount.get(word);
-                    q.offer(new ADT(file, wordCounter.get(word)));
+                    PriorityQueue<FileCount> q = wordToFileCount.get(word);
+                    q.offer(new FileCount(file, wordCounter.get(word)));
                 } else {
-                    PriorityQueue<ADT> q = new PriorityQueue<>(new Comparator<ADT>(){
+                    PriorityQueue<FileCount> q = new PriorityQueue<>(new Comparator<FileCount>(){
                         @Override
-                        public int compare(ADT a1, ADT a2) {
+                        public int compare(FileCount a1, FileCount a2) {
                             return a1.getCount() < a2.getCount() ? 1: -1;
                         }
                     });
-                    q.offer(new ADT(file, wordCounter.get(word)));
+                    q.offer(new FileCount(file, wordCounter.get(word)));
                     wordToFileCount.put(word, q);
                 }
             }

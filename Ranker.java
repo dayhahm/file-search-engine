@@ -14,25 +14,25 @@ public class Ranker {
      * add summary of the synchronization discipline.
      */
 
-    private ConcurrentHashMap<String, PriorityQueue<ADT>> wordToFileCount;
+    private ConcurrentHashMap<String, PriorityQueue<FileCount>> wordToFileCount;
     private int n;
 
-    public Ranker(ConcurrentHashMap<String, PriorityQueue<ADT>> wordToFileCount) {
+    public Ranker(ConcurrentHashMap<String, PriorityQueue<FileCount>> wordToFileCount) {
         this.wordToFileCount = wordToFileCount;
         this.n = 10;
     }
 
-    public Ranker(ConcurrentHashMap<String, PriorityQueue<ADT>> wordToFileCount, int n) {
+    public Ranker(ConcurrentHashMap<String, PriorityQueue<FileCount>> wordToFileCount, int n) {
         this.wordToFileCount = wordToFileCount;
         this.n = n;
     }
 
-    public ADT[] getTop(String word) throws Exception {
+    public FileCount[] getTop(String word) throws Exception {
         synchronized (wordToFileCount) {
             if (wordToFileCount.containsKey(word)) {
-                PriorityQueue<ADT> q = wordToFileCount.get(word);
+                PriorityQueue<FileCount> q = wordToFileCount.get(word);
                 int k = Math.min(q.size(), n);
-                ADT[] top = new ADT[k];
+                FileCount[] top = new FileCount[k];
 
                 for (int i = 0; i < k; i++) {
                     top[i] = q.poll();

@@ -1,13 +1,13 @@
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class ADT {
+public class FileCount {
 
     private String filename;
     private int count;
 
-    public ADT(String filename, int count) {
-        this.filename = filename;
+    public FileCount(String filename, int count) {
+        this.filename = null;
         this.count = count;
     }
 
@@ -29,7 +29,7 @@ public class ADT {
 
     public static void main(String[] args) {
         // Path path = Paths.get("/Users/debbie/Documents/file-search-engine");
-        // ADT adt = new ADT(path, 4);
-        // System.out.println(adt.toString());
+        // FileCount FileCount = new FileCount(path, 4);
+        // System.out.println(FileCount.toString());
     }
 }

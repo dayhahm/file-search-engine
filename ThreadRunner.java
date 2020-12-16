@@ -3,11 +3,15 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.nio.file.*;
 
+// memory consumption tests
+// store null instead of path in FileCount
+// maybe test on tempest for more memory
+
 public class ThreadRunner {
 
     public static void main(String[] args) {
         BoundedBuffer buffer = new BoundedBuffer(20);
-        ConcurrentHashMap<String, PriorityQueue<ADT>> wordToFileCount = new ConcurrentHashMap<>();
+        ConcurrentHashMap<String, PriorityQueue<FileCount>> wordToFileCount = new ConcurrentHashMap<>();
         ConcurrentHashMap<String, Integer> stats = new ConcurrentHashMap<>();
         stats.put("files", 0);
         stats.put("bytes", 0);
@@ -52,7 +56,7 @@ public class ThreadRunner {
                 while (!word.equals("quit")) {
                     try {
                         System.out.println(word);
-                        ADT[] filePairs = ranker.getTop(word);
+                        FileCount[] filePairs = ranker.getTop(word);
                         for (int i = 0; i < filePairs.length; i++) {
                             System.out.println((i + 1) + " - " + filePairs[i].getFilename() + ":" + filePairs[i].getCount());
                         }
@@ -65,8 +69,7 @@ public class ThreadRunner {
             } catch (Exception e) {
                 System.out.println(e.getMessage());
             }
-        } catch (
-                Exception e) {
+        } catch (Exception e) {
             System.out.println(e);
             System.exit(1);
         }
