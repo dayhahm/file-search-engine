@@ -1,20 +1,22 @@
+import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.io.IOException;
-import java.util.stream.Collectors;
-import java.util.List;
-import java.util.ArrayList;
 
+/**
+ * Traverser is a producer thread that recursively travels through a specified directory's subdirectories, finding all
+ * files and adding them to the bounded buffer.
+ */
 public class Traverser extends Thread {
-    /*
-     * Only one thread for the traverser. Producer thread for the bounded buffer.
-     * Traverses the file system from the root directory. Use BFS or DFS and the FileVisitor interface
-     * https://docs.oracle.com/javase/tutorial/essential/io/walk.html
-     * Throw all files found into a bounded buffer.
-     */
-    Path rootDir;
-    BoundedBuffer buffer;
 
+    private Path rootDir;
+    private BoundedBuffer buffer;
+
+    /**
+     * Creates a Traverser object that has a starting directory of the specified root and adds to the given buffer.
+     * @param buffer the bounded buffer to add to
+     * @param rootString the root directory to traverse through
+     * @throws Exception On invalid root directory
+     */
     public Traverser(BoundedBuffer buffer, String rootString) throws Exception {
         super();
         this.buffer = buffer;
@@ -28,37 +30,34 @@ public class Traverser extends Thread {
         }
     }
 
+    /**
+     * Traverses the root directory recursively. Adds all of the files it finds into the bounded buffer.
+     */
     public void run() {
         try {
-//            walk through all path starting from the root directory and filter so only files are remaining
-            List<String> files = new ArrayList<>();
+//            walk through all path starting from the root directory and add to buffer
             Files.walkFileTree(
                     rootDir, new SimpleFileVisitor<Path>() {
                         @Override
                         public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
                                 throws IOException {
-                            files.add(file.toString());
+                            try {
+                                buffer.enqueue(file.toString());
+                            } catch (InterruptedException e) {
+                                System.out.println(e);
+                            }
                             return FileVisitResult.CONTINUE;
                         }
 
                         @Override
                         public FileVisitResult visitFileFailed(Path file, IOException e)
                                 throws IOException {
-                            System.out.println("Could not visit " + file);
+                            System.out.println("Could not visit " + file + "due to:");
+                            System.out.println("e");
                             return FileVisitResult.SKIP_SUBTREE;
                         }
                     }
             );
-//            List<Path> files = Files.walk(rootDir)
-//                                    .filter(p -> Files.isRegularFile(p))
-//                                    .collect(Collectors.toList());
-            for (String file: files) {
-                try {
-                    buffer.enqueue(file);
-                } catch (InterruptedException e) {
-                    System.out.println("traverser interrupted");
-                }
-            }
         } catch (IOException e) {
             System.out.println("Issue accessing the root directory.");
         }

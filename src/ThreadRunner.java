@@ -1,7 +1,6 @@
+import java.util.PriorityQueue;
 import java.util.Scanner;
-import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.nio.file.*;
 
 // memory consumption tests
 // store null instead of path in FileCount
@@ -9,31 +8,46 @@ import java.nio.file.*;
 
 public class ThreadRunner {
 
+    /**
+     * Driver method for the search engine. Creates all the necessary threads, takes user input for directory and search
+     * terms, and prints them out.
+     */
     public static void main(String[] args) {
+        //initialize
         BoundedBuffer buffer = new BoundedBuffer(20);
         ConcurrentHashMap<String, PriorityQueue<FileCount>> wordToFileCount = new ConcurrentHashMap<>();
+
+        //verbose mode statistics
+        boolean verbose = false;
         ConcurrentHashMap<String, Integer> stats = new ConcurrentHashMap<>();
         stats.put("files", 0);
         stats.put("bytes", 0);
         stats.put("unreported", 0);
         stats.put("paths", 0);
 
-        boolean verbose = false;
+        // check for verbose option
         for (String arg: args) {
             if (arg.equals("-v") || arg.equals("--verbose")) {
                 verbose = true;
             }
         }
 
+        // take in user input for root directory
+        Scanner s = new Scanner(System.in);
+        System.out.print("Enter the directory you'd like to index: ");
+        String dir = s.nextLine();
+
+        // create parser threads
         Parser p1 = new Parser(buffer, wordToFileCount, stats, verbose);
         Parser p2 = new Parser(buffer, wordToFileCount, stats, verbose);
         Parser p3 = new Parser(buffer, wordToFileCount, stats, verbose);
         Parser p4 = new Parser(buffer, wordToFileCount, stats, verbose);
         Parser p5 = new Parser(buffer, wordToFileCount, stats, verbose);
-        String dir = "/Users/debbie/Documents/Coronavirus-Twitter-Trends";
         try {
+            // create the traverser and watcher. if user gave invalid root, traverser will throw error and program quits
             Traverser traverser = new Traverser(buffer, dir);
             Watcher watcher = new Watcher(buffer, dir);
+
             System.out.println("Starting up all threads");
             traverser.start();
             p1.start();
@@ -43,27 +57,30 @@ public class ThreadRunner {
             p5.start();
             watcher.start();
 
+            //wait for traverser to finish initial indexing before allowing users to search
             traverser.join();
 
             System.out.println("Traversal has completed — parsing may be ongoing");
-
             try {
+                // create the ranker
                 Ranker ranker = new Ranker(wordToFileCount);
-                Scanner s = new Scanner(System.in);
-                System.out.println("Enter a word to search: ");
+
+                // take user input for search term
+                System.out.println("Enter a word to search (enter !quit to exit): ");
                 String word = s.nextLine();
-                word = word.toLowerCase();
-                while (!word.equals("quit")) {
+                word = word.toLowerCase(); // want to match words regardless of capitalization
+
+                while (!word.equals("!quit")) {
                     try {
-                        System.out.println(word);
+                        // get and print the top file matches
                         FileCount[] filePairs = ranker.getTop(word);
                         for (int i = 0; i < filePairs.length; i++) {
-                            System.out.println((i + 1) + " - " + filePairs[i].getFilename() + ":" + filePairs[i].getCount());
+                            System.out.println((i + 1) + " - " + filePairs[i].toString());
                         }
-                    } catch (Exception e) {
+                    } catch (Exception e) { // in the case that there are no files that contain the keyword
                         System.out.println(e.getMessage());
                     }
-                    System.out.println("Enter a word to search: ");
+                    System.out.println("Enter a word to search (enter !quit to exit): ");
                     word = s.nextLine();
                 }
             } catch (Exception e) {
@@ -73,7 +90,7 @@ public class ThreadRunner {
             System.out.println(e);
             System.exit(1);
         }
-        System.out.println("quitting");
+        System.out.println("Exiting file search engine");
         System.exit(0);
     }
 }

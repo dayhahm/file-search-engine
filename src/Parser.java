@@ -3,10 +3,13 @@ import java.io.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-// look into tries
 // or some parts of this structure may be in memory
 // look into maximum heap size relative to stats
 
+/**
+ * Parser is a thread that takes files out of a BoundedBuffer, parses the file, creates the appropriate FileCount
+ * objects, and inserts them into the shared index.
+ */
 public class Parser extends Thread {
     /*
      * Will have multiple threads. consumer thread for the bounded buffer.
@@ -19,13 +22,19 @@ public class Parser extends Thread {
      * memory profiling tools (google later) measures the kinds of objects that are the msot costly
      */
 
-    // this map needs to be shared by all the threads. so maybe this needs to exist in the thread control
-    //    private Map<String, FileCount> wordMap;   //is HashTable an implementation of Map?
     private BoundedBuffer buffer;
     private ConcurrentHashMap<String, PriorityQueue<FileCount>> wordToFileCount;
     private ConcurrentHashMap<String, Integer> stats;
     private boolean verbose;
 
+    /**
+     * Creates a Parser object that consumes the specified buffer and adds to the specified index. If verbose is true,
+     * the stats map will be updated with statistics about the index.
+     * @param buffer the BoundedBuffer out of which to take file names
+     * @param wordToFileCount the index
+     * @param stats map that contains index stats
+     * @param verbose true if verbose mode is on
+     */
     public Parser(BoundedBuffer buffer, ConcurrentHashMap<String, PriorityQueue<FileCount>> wordToFileCount,
                   ConcurrentHashMap<String, Integer> stats, boolean verbose) {
         super();
@@ -35,21 +44,29 @@ public class Parser extends Thread {
         this.verbose = verbose;
     }
 
+    /**
+     * Parses the given file and adds the appropriate FileCount objects into the index.
+     * @param file
+     */
     public void parse(String file) {
+        // initialize file word counter
         Map<String, Integer> wordCounter = new HashMap<>();
 
         try {
-            // change to read incrementally instead of reading all the lines at once
+            // read the file line by line
             BufferedReader br = new BufferedReader(new FileReader(file));
             String line = "";
             while ((line=br.readLine()) != null) {
+                // split each line by white space
                 String[] words = line.split("\\s+");
+                // add to word counter. words are changed to lowercase to ensure matching regardless of capitalization
                 for (String word: words) {
                     wordCounter.put(word.toLowerCase(), wordCounter.getOrDefault(word, 0) + 1);
                 }
             }
 
-            synchronized (stats) {
+            // if verbose mode is on, update stats
+            if (verbose) {
                 stats.put("unreported", stats.get("unreported") + 1);
                 stats.put("files", stats.get("files") + 1);
                 stats.put("bytes", stats.get("bytes") + (int) Files.size(Paths.get(file)));
@@ -59,26 +76,34 @@ public class Parser extends Thread {
             System.out.println(e.getMessage());
         }
 
-        synchronized(wordToFileCount) {
-            for (String word : wordCounter.keySet()) {
-                if (wordToFileCount.containsKey(word)) {
-                    PriorityQueue<FileCount> q = wordToFileCount.get(word);
-                    q.offer(new FileCount(file, wordCounter.get(word)));
-                } else {
-                    PriorityQueue<FileCount> q = new PriorityQueue<>(new Comparator<FileCount>(){
-                        @Override
-                        public int compare(FileCount a1, FileCount a2) {
-                            return a1.getCount() < a2.getCount() ? 1: -1;
+        // go through the word counter and add the corresponding FileCount objects into the proper priority queue
+        for (String word : wordCounter.keySet()) {
+            if (wordToFileCount.containsKey(word)) {
+                PriorityQueue<FileCount> q = wordToFileCount.get(word);
+                q.offer(new FileCount(file, wordCounter.get(word)));
+            } else { // if the word has not yet been seen, create a new priority queue that sorts by word count and add
+                // sort by FileCount count, descending
+                PriorityQueue<FileCount> q = new PriorityQueue<>(new Comparator<FileCount>(){
+                    @Override
+                    public int compare(FileCount a1, FileCount a2) {
+                        if (a1.getCount() < a2.getCount()) {
+                            return 1;
+                        } else if (a1.getCount() > a2.getCount()) {
+                            return -1;
                         }
-                    });
-                    q.offer(new FileCount(file, wordCounter.get(word)));
-                    wordToFileCount.put(word, q);
-                }
+                        return 0;
+                    }
+                });
+                q.offer(new FileCount(file, wordCounter.get(word)));
+                wordToFileCount.put(word, q);
             }
         }
-        //keep count of how many bytes of files/how many files we have read
     }
 
+    /**
+     * Takes a file name out of the buffer and passes it to be parsed. Prints the stats report after about 100 files are
+     * read by all Parser threads.
+     */
     public void run() {
         while (!Thread.currentThread().isInterrupted()) {
             try {
