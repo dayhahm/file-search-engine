@@ -1,3 +1,4 @@
+import java.util.Locale;
 import java.util.PriorityQueue;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
@@ -35,7 +36,7 @@ public class ThreadRunner {
         // take in user input for root directory
         Scanner s = new Scanner(System.in);
         System.out.print("Enter the directory you'd like to index: ");
-        String dir = s.nextLine();
+        String dir = s.nextLine().trim();
 
         // create parser threads
         Parser p1 = new Parser(buffer, wordToFileCount, stats, verbose);
@@ -68,7 +69,7 @@ public class ThreadRunner {
                 // take user input for search term
                 System.out.println("Enter a word to search (enter !quit to exit): ");
                 String word = s.nextLine();
-                word = word.toLowerCase(); // want to match words regardless of capitalization
+                word = word.toLowerCase().trim(); // want to match words regardless of capitalization
 
                 while (!word.equals("!quit")) {
                     try {
@@ -82,6 +83,7 @@ public class ThreadRunner {
                     }
                     System.out.println("Enter a word to search (enter !quit to exit): ");
                     word = s.nextLine();
+                    word = word.toLowerCase().trim();
                 }
             } catch (Exception e) {
                 System.out.println(e.getMessage());

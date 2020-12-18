@@ -57,17 +57,21 @@ public class Parser extends Thread {
             BufferedReader br = new BufferedReader(new FileReader(file));
             String line = "";
             while ((line=br.readLine()) != null) {
-                // split each line by white space
-                String[] words = line.split("\\s+");
+                // split each line by any non alphanumeric character (not including apostrophes)
+                String[] words = line.split("[^a-zA-Z0-9']+");
                 // add to word counter. words are changed to lowercase to ensure matching regardless of capitalization
                 for (String word: words) {
-                    wordCounter.put(word.toLowerCase(), wordCounter.getOrDefault(word, 0) + 1);
+                    word = word.toLowerCase();
+                    wordCounter.put(word, wordCounter.getOrDefault(word, 0) + 1);
                 }
             }
         } catch (IOException e) {
             System.out.println(e.getMessage());
         }
 
+        if (wordCounter.containsKey("holmes")) {
+            System.out.println(wordCounter.get("holmes"));
+        }
         // go through the word counter and add the corresponding FileCount objects into the proper priority queue
         for (String word : wordCounter.keySet()) {
             if (wordToFileCount.containsKey(word)) {

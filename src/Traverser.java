@@ -21,7 +21,7 @@ public class Traverser extends Thread {
         super();
         this.buffer = buffer;
         // check that root directory given is not just white space or empty
-        if (rootString.isBlank()) {
+        if (rootString.equals("")) {
             throw new Exception("Given root directory (" + rootString + ") is invalid.");
         }
         // check that it's a valid path

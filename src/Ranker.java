@@ -47,7 +47,6 @@ public class Ranker {
      * @throws Exception On index does not have the word
      */
     public FileCount[] getTop(String word) throws Exception {
-
         if (wordToFileCount.containsKey(word)) {
             synchronized (wordToFileCount.get(word)) { // need to synchronize as PriorityQueue is not thread safe
                 PriorityQueue<FileCount> q = wordToFileCount.get(word);
@@ -64,7 +63,7 @@ public class Ranker {
                 return top;
             }
         } else {
-            throw new Exception("no indexed files contain this word");
+            throw new Exception(String.format("no indexed files contains '%s'", word));
         }
 
     }
