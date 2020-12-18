@@ -17,14 +17,6 @@ public class FileCount {
     }
 
     /**
-     * Gets the file name
-     * @return the file name
-     */
-    public String getFilename() {
-        return filename;
-    }
-
-    /**
      * Gets the word count
      * @return the word count
      */

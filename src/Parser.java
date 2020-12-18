@@ -64,14 +64,6 @@ public class Parser extends Thread {
                     wordCounter.put(word.toLowerCase(), wordCounter.getOrDefault(word, 0) + 1);
                 }
             }
-
-            // if verbose mode is on, update stats
-            if (verbose) {
-                stats.put("unreported", stats.get("unreported") + 1);
-                stats.put("files", stats.get("files") + 1);
-                stats.put("bytes", stats.get("bytes") + (int) Files.size(Paths.get(file)));
-                stats.put("paths", stats.get("paths") + file.length());
-            }
         } catch (IOException e) {
             System.out.println(e.getMessage());
         }
@@ -96,7 +88,21 @@ public class Parser extends Thread {
                 });
                 q.offer(new FileCount(file, wordCounter.get(word)));
                 wordToFileCount.put(word, q);
+                if (verbose) {
+                    stats.put("keysLength", stats.get("keysLength") + word.length());
+                }
             }
+        }
+        try {
+            // if verbose mode is on, update stats
+            if (verbose) {
+                stats.put("unreported", stats.get("unreported") + 1);
+                stats.put("files", stats.get("files") + 1);
+                stats.put("bytes", stats.get("bytes") + (int) Files.size(Paths.get(file)));
+                stats.put("paths", stats.get("paths") + file.length());
+            }
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
         }
     }
 
@@ -113,18 +119,26 @@ public class Parser extends Thread {
                 System.out.println("parser interrupted");
             }
             if (verbose) {
-                synchronized (wordToFileCount) {
+                synchronized(stats) {
                     if (stats.get("unreported") >= 100) {
-                        System.out.println("------------------");
-                        System.out.println("Files read: " + stats.get("files"));
-                        System.out.println("Bytes read: " + stats.get("bytes"));
-                        System.out.println("Unique words:" + wordToFileCount.keySet().size());
-                        System.out.println("Total size of path names stored: " + stats.get("paths"));
+                        System.out.println("------------------------");
+                        System.out.println("Files:");
+                        System.out.println(String.format("\t%d files read", stats.get("files")));
+                        System.out.println(String.format("\t%d bytes read", stats.get("bytes")));
+                        System.out.println(String.format("\t%d avg file name length/ %d total length",
+                                (stats.get("paths") / stats.get("files")),
+                                stats.get("paths")));
+
+                        System.out.println("Index:");
+                        System.out.println(String.format("\t%d keys", wordToFileCount.size()));
+                        System.out.println(String.format("\t%d avg key length/ %d total length",
+                                (stats.get("keysLength") / wordToFileCount.size()),
+                                stats.get("keysLength")));
+
                         stats.put("unreported", 0);
                     }
                 }
             }
         }
     }
-
 }

@@ -1,5 +1,7 @@
 import java.nio.file.*;
 import java.io.IOException;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.StandardWatchEventKinds;
 
 /**
  * Watcher is a thread that serves as a notification service for newly created files, modified files, and deleted files.
@@ -17,15 +19,24 @@ public class Watcher extends Thread {
      * @throws Exception on IO error
      */
     public Watcher(BoundedBuffer buffer, String rootDirectory) throws Exception {
-        // create the watch service to notify on file creations, modifications, and deletions
+        // create the watch service to notify on file creations, modifications, and deletions for root directory and sub directories
         this.rootDirectory = Paths.get(rootDirectory);
         try {
             watchService = FileSystems.getDefault().newWatchService();
-            this.rootDirectory.register(watchService,
-                    StandardWatchEventKinds.ENTRY_CREATE,
-                    StandardWatchEventKinds.ENTRY_MODIFY);
+            Files.walkFileTree(this.rootDirectory, new SimpleFileVisitor<Path>() {
+                @Override
+                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                    dir.register(watchService,
+                            StandardWatchEventKinds.ENTRY_CREATE,
+                            StandardWatchEventKinds.ENTRY_DELETE,
+                            StandardWatchEventKinds.ENTRY_MODIFY);
+                    return FileVisitResult.CONTINUE;
+                }
+            });
         } catch (IOException e) {
-            throw new Exception("io error while creating watcher");
+                throw new Exception("io error while creating watcher");
+        } catch (Exception e) {
+            System.out.println("hello");
         }
         this.buffer = buffer;
     }
@@ -36,14 +47,17 @@ public class Watcher extends Thread {
      */
     public void run() {
         WatchKey key;
-        System.out.println("running watcher");
         try {
             while ((key = watchService.take()) != null) {
                 for (WatchEvent<?> event : key.pollEvents()) {
                     try {
-                        Path context = (Path) event.context();
-                        System.out.println("throwing " + context + "into queue");
-                        buffer.enqueue((rootDirectory.resolve(context)).toString());
+                        // the context method returns a relative path, so need to get the parent path from the key
+                        Path parent = (Path) (key.watchable());
+                        Path child = parent.resolve((Path) event.context());
+                        //check that the child object is a file
+                        if (!Files.isDirectory(child)) {
+                            buffer.enqueue(child.toString());
+                        }
                     } catch (InterruptedException e) {
                         System.out.println("watcher interrupted");
                     }

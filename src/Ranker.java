@@ -49,7 +49,7 @@ public class Ranker {
     public FileCount[] getTop(String word) throws Exception {
 
         if (wordToFileCount.containsKey(word)) {
-            synchronized (wordToFileCount.get(word)) {
+            synchronized (wordToFileCount.get(word)) { // need to synchronize as PriorityQueue is not thread safe
                 PriorityQueue<FileCount> q = wordToFileCount.get(word);
                 int k = Math.min(q.size(), n);
                 FileCount[] top = new FileCount[k];

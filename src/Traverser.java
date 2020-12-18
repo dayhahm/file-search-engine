@@ -20,11 +20,17 @@ public class Traverser extends Thread {
     public Traverser(BoundedBuffer buffer, String rootString) throws Exception {
         super();
         this.buffer = buffer;
+        // check that root directory given is not just white space or empty
+        if (rootString.isBlank()) {
+            throw new Exception("Given root directory (" + rootString + ") is invalid.");
+        }
+        // check that it's a valid path
         try {
             this.rootDir = Paths.get(rootString);
         } catch (InvalidPathException e) {
             throw new Exception("Given root directory (" + rootString + ") is invalid.");
         }
+        //check that it is a valid directory
         if (!Files.isDirectory(this.rootDir)) {
             throw new Exception("The given root (" + rootString + ") is not a directory.");
         }
@@ -39,8 +45,7 @@ public class Traverser extends Thread {
             Files.walkFileTree(
                     rootDir, new SimpleFileVisitor<Path>() {
                         @Override
-                        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-                                throws IOException {
+                        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
                             try {
                                 buffer.enqueue(file.toString());
                             } catch (InterruptedException e) {
@@ -50,10 +55,9 @@ public class Traverser extends Thread {
                         }
 
                         @Override
-                        public FileVisitResult visitFileFailed(Path file, IOException e)
-                                throws IOException {
+                        public FileVisitResult visitFileFailed(Path file, IOException e) {
                             System.out.println("Could not visit " + file + "due to:");
-                            System.out.println("e");
+                            System.out.println(e);
                             return FileVisitResult.SKIP_SUBTREE;
                         }
                     }

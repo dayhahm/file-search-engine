@@ -2,15 +2,14 @@ import java.util.PriorityQueue;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
 
-// memory consumption tests
-// store null instead of path in FileCount
-// maybe test on tempest for more memory
-
+/**
+ * Driver class.
+ */
 public class ThreadRunner {
 
     /**
      * Driver method for the search engine. Creates all the necessary threads, takes user input for directory and search
-     * terms, and prints them out.
+     * terms, and prints them out. Exits with code 0 on successful run, and 1 on error.
      */
     public static void main(String[] args) {
         //initialize
@@ -24,6 +23,7 @@ public class ThreadRunner {
         stats.put("bytes", 0);
         stats.put("unreported", 0);
         stats.put("paths", 0);
+        stats.put("keysLength", 0);
 
         // check for verbose option
         for (String arg: args) {
