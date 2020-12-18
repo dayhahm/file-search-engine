@@ -1,30 +1,19 @@
 import java.nio.file.*;
 import java.io.*;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-
-// or some parts of this structure may be in memory
-// look into maximum heap size relative to stats
 
 /**
  * Parser is a thread that takes files out of a BoundedBuffer, parses the file, creates the appropriate FileCount
  * objects, and inserts them into the shared index.
  */
 public class Parser extends Thread {
-    /*
-     * Will have multiple threads. consumer thread for the bounded buffer.
-     * Takes in a file frome the bounded buffer, creates and updates a HashTable with a word as the key and an FileCount
-     * object as a value.
-     * number of words in the hashamp
-     * size of words in index
-     * priority queue size + path length
-     *
-     * memory profiling tools (google later) measures the kinds of objects that are the msot costly
-     */
 
     private BoundedBuffer buffer;
     private ConcurrentHashMap<String, PriorityQueue<FileCount>> wordToFileCount;
-    private ConcurrentHashMap<String, Integer> stats;
+    private ConcurrentHashMap<String, Long> stats;
     private boolean verbose;
 
     /**
@@ -36,7 +25,7 @@ public class Parser extends Thread {
      * @param verbose true if verbose mode is on
      */
     public Parser(BoundedBuffer buffer, ConcurrentHashMap<String, PriorityQueue<FileCount>> wordToFileCount,
-                  ConcurrentHashMap<String, Integer> stats, boolean verbose) {
+                  ConcurrentHashMap<String, Long> stats, boolean verbose) {
         super();
         this.buffer = buffer;
         this.wordToFileCount = wordToFileCount;
@@ -69,14 +58,13 @@ public class Parser extends Thread {
             System.out.println(e.getMessage());
         }
 
-        if (wordCounter.containsKey("holmes")) {
-            System.out.println(wordCounter.get("holmes"));
-        }
         // go through the word counter and add the corresponding FileCount objects into the proper priority queue
         for (String word : wordCounter.keySet()) {
             if (wordToFileCount.containsKey(word)) {
-                PriorityQueue<FileCount> q = wordToFileCount.get(word);
-                q.offer(new FileCount(file, wordCounter.get(word)));
+                synchronized (wordToFileCount.get(word)) {
+                    PriorityQueue<FileCount> q = wordToFileCount.get(word);
+                    q.offer(new FileCount(file, wordCounter.get(word)));
+                }
             } else { // if the word has not yet been seen, create a new priority queue that sorts by word count and add
                 // sort by FileCount count, descending
                 PriorityQueue<FileCount> q = new PriorityQueue<>(new Comparator<FileCount>(){
@@ -116,30 +104,40 @@ public class Parser extends Thread {
      */
     public void run() {
         while (!Thread.currentThread().isInterrupted()) {
+            Duration time = Duration.ZERO;
             try {
+                Instant start = Instant.now();
                 String file = buffer.dequeue();
                 parse(file);
+                Instant end = Instant.now();
+                time = Duration.between(start, end);
             } catch (InterruptedException e) {
                 System.out.println("parser interrupted");
             }
             if (verbose) {
-                synchronized(stats) {
-                    if (stats.get("unreported") >= 100) {
+                synchronized(stats) { //synchronize on stats, so that only one is print report is printed
+                    stats.put("parseTime", stats.get("parseTime") + time.toMillis());
+                    if (stats.get("unreported") >= 1) {
                         System.out.println("------------------------");
                         System.out.println("Files:");
                         System.out.println(String.format("\t%d files read", stats.get("files")));
-                        System.out.println(String.format("\t%d bytes read", stats.get("bytes")));
-                        System.out.println(String.format("\t%d avg file name length/ %d total length",
+                        System.out.println(String.format("\t%d bytes (avg file length)/ %d bytes (total length)",
+                                (stats.get("bytes") / stats.get("files")),
+                                stats.get("bytes")));
+                        System.out.println(String.format("\t%d chars (avg file name length)/ %d chars (total length)",
                                 (stats.get("paths") / stats.get("files")),
                                 stats.get("paths")));
+                        System.out.println(String.format("\t%d ms (avg time spent parsing file)/ %d ms (total)",
+                               (stats.get("parseTime") / stats.get("files")),
+                                stats.get("parseTime")));
 
                         System.out.println("Index:");
                         System.out.println(String.format("\t%d keys", wordToFileCount.size()));
-                        System.out.println(String.format("\t%d avg key length/ %d total length",
+                        System.out.println(String.format("\t%d chars (avg key length)/ %d chars (total length)",
                                 (stats.get("keysLength") / wordToFileCount.size()),
                                 stats.get("keysLength")));
 
-                        stats.put("unreported", 0);
+                        stats.put("unreported", 0L);
                     }
                 }
             }

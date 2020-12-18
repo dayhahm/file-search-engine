@@ -4,9 +4,10 @@
 The src folder contains all of our class files. The driver class file is the ThreadRunner.java file.
 
 ### Instructions/ How to run and install
-Our project uses Java 11 and has no outside dependencies. `git clone` the repository, compile with 
-`javac ThreadRunner.java`, and then run with `java ThreadRunner`. If you would like to run the engine with verbose mode 
-on (prints out additional information, like number of files parsed, number of index keys, etc), run with `-v`.
+Our project uses Java 11 and has no outside dependencies (I think tempest uses Java 8 and so it doesn't work there). 
+`git clone` the repository, compile with `javac ThreadRunner.java`, and then run with `java ThreadRunner`. If you would
+like to run the engine with verbose mode on (prints out additional information, like number of files parsed, number of 
+index keys, etc), run with `-v`.
 
 The program will prompt the user to enter a root directory to traverse. Please enter the absolute path to the directory.
 
@@ -146,11 +147,25 @@ when the initial parsing has ended as the Watcher thread may be adding files to 
 updates. The Parser threads are never completely done, and thus can't be joined back to the main thread to signal that 
 they have finished. 
 
+
 The main flaw to this implementation is again the delete and update operations. In addition to the issues mentioned in
 the design section, while the retrieval methods for the PriorityQueue are constant, we pay from them in the remove 
 method, which takes linear time. In a large system, which many deletes and updates, these costs stack up.
 
 ### Evaluation
+
+Parsing is the main time sink of the engine, so we ran it on three different directories and timed the initial parsing.
+
+The first contains a set of tweets. It contains 603 files and is 119 mbs big. It took about 33111 ms to parse 602 files
+(not including traversal), which is about 55 ms per file, and each file is about 200 kbs big.
+
+The second contains a set of Marvel character wikipedia pages. It contains 1632 files and is 28 mbs big. It took about 
+10366 ms to parse 1610 files, which is about 6 ms per file, and each file is about 15 kbs big.
+
+The last contains books from Project Gutenberg. It contains 10 files and is about 9.7 mbs big. It took about 5544 ms to
+parse 10 files, which is about 554 ms per file, and each file is about 1 mb big.
+
+Based on this data, it looks like the parsing is roughly linear, 
 
 When we tested the engine with 1gb of Java heap memory, it is able to index about over 3.1 million unique words and 
 about 215,493 characters of unique file path names. When tested with 1024mb of space, it is able to index about 2.6 
@@ -179,7 +194,7 @@ Persistency would be the last of our stretch goals that we would implement.
 
 Our file search engine scratches just the surface of what modern day file search engine can do, but even with our 
 limited scope, it exposes the challenges of designing such a system. A repeated theme in systems is that there is not 
-perfect solution to a problem, only slightly less worse solutions than the others. Our proje
+perfect solution to a problem, only slightly less worse solutions than the others. 
 
 ### References
 -BoundedBuffer reading

@@ -19,12 +19,13 @@ public class ThreadRunner {
 
         //verbose mode statistics
         boolean verbose = false;
-        ConcurrentHashMap<String, Integer> stats = new ConcurrentHashMap<>();
-        stats.put("files", 0);
-        stats.put("bytes", 0);
-        stats.put("unreported", 0);
-        stats.put("paths", 0);
-        stats.put("keysLength", 0);
+        ConcurrentHashMap<String, Long> stats = new ConcurrentHashMap<>();
+        stats.put("files", 0L);
+        stats.put("bytes", 0L);
+        stats.put("unreported", 0L);
+        stats.put("paths", 0L);
+        stats.put("keysLength", 0L);
+        stats.put("parseTime", 0L);
 
         // check for verbose option
         for (String arg: args) {
