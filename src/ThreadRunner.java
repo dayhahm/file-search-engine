@@ -64,25 +64,55 @@ public class ThreadRunner {
 
             System.out.println("Traversal has completed — parsing may be ongoing");
             try {
-                // create the ranker
-                Ranker ranker = new Ranker(wordToFileCount);
-
-                // take user input for search term
-                System.out.println("Enter a word to search (enter !quit to exit): ");
+                //print out instructions for use
+                System.out.println("\nWelcome to the directory: " + dir + 
+                    "\nYou may search for a single word or a two-word phrase" +
+                    "\n    i.e. 'superhero' or 'Peter Parker'"+
+                    "\nIf you would like to specify the number of results, include a number after the search term, " +
+                    "separating the values with a comma" +
+                    "\n    i.e. 'Thor, 15' or 'infinity stone, 3'" +
+                    "\nHappy searching!\n");
+                
+                    // take user input for search term
+                System.out.println("Enter a word to search (enter !quit to exit or !help for instructions): ");
                 String word = s.nextLine();
                 word = word.toLowerCase().trim(); // want to match words regardless of capitalization
 
                 while (!word.equals("!quit")) {
+
+                    //print instructions for user
+                    if (word.equals("!help")){
+                        System.out.println("\nHow to use this search engine: \n" +
+                        "\nYou may search for a single word or a two-word phrase" +
+                        "\n    i.e. 'superhero' or 'Peter Parker'"+
+                        "\nIf you would like to specify the number of results, include a number after the search term, " +
+                        "separating the values with a comma" +
+                        "\n    i.e. 'Thor, 15' or 'infinity stone, 3' \n");
+
+                        System.out.println("Enter a word to search (enter !quit to exit or !help for instructions): ");
+                        word = s.nextLine();
+                        word = word.toLowerCase().trim();
+                        continue;
+                    }
+
+                    // create the ranker, pass it a default limit of 10 if not specified
+                    Ranker ranker;
+                    String[] words = word.split(",");
+                    if (words.length > 1){
+                        int limit = Integer.parseInt(words[1].trim());
+                        ranker = new Ranker(wordToFileCount, limit);
+                        word = words[0];
+                    } else ranker = new Ranker(wordToFileCount, 10);                   
                     try {
-                        // get and print the top file matches
-                        FileCount[] filePairs = ranker.getTop(word);
+                        // get and print the top file matches                    
+                        FileCount[] filePairs = ranker.rank(word);
                         for (int i = 0; i < filePairs.length; i++) {
                             System.out.println((i + 1) + " - " + filePairs[i].toString());
                         }
                     } catch (Exception e) { // in the case that there are no files that contain the keyword
                         System.out.println(e.getMessage());
                     }
-                    System.out.println("Enter a word to search (enter !quit to exit): ");
+                    System.out.println("Enter a word to search (enter !quit to exit or !help for instructions): ");
                     word = s.nextLine();
                     word = word.toLowerCase().trim();
                 }

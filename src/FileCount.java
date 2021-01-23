@@ -25,6 +25,14 @@ public class FileCount {
     }
 
     /**
+     * Gets the filename
+     * @return the filename
+     */
+    public String getFileName() {
+        return filename;
+    }    
+
+    /**
      * Creates a string representation of a FileCount object.
      * @return string representation of FileCount object.
      */

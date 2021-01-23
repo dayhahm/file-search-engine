@@ -67,7 +67,7 @@ Our file search engine has 4 basic parts.
     3) Our index indexes by word. The corresponding value for each word is a collection of file and respective word 
     count pairs.
 3) Ranker
-    1) The ranker takes the user inputted keyword and then creates a ranking of the files in the index for that word.
+    1) The ranker takes the user inputted keyword and then creates a ranking of the files in the index for that word. The ranker supports single words or a two-word phrases. The user can input a limit as well to return a specific number of resutls. For example, if they only want the top file containing a word or phrase. A new ranker is intiated with each user input.
 4) Watcher
     1) The watcher watches for any file creation, update, deletion notices from the file system. On creation notices, 
     the watcher puts the newly created file into the bounded buffer. On deletion notices, the watcher deletes any 

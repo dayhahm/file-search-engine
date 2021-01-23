@@ -36,7 +36,7 @@ public class Watcher extends Thread {
         } catch (IOException e) {
                 throw new Exception("io error while creating watcher");
         } catch (Exception e) {
-            System.out.println("hello");
+            System.out.println(e.getMessage());
         }
         this.buffer = buffer;
     }
